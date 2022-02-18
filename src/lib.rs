@@ -9,15 +9,24 @@ pub struct Configuration {
     pub prompt: String
 }
 
+pub fn exit_builtin(errno: i32) {
+    println!("Thanks for using ash!");
+    process::exit(errno);
+}
+
+pub fn cd_builtin() {
+}
+
 pub fn run(config: &Configuration) -> Result<(), Box<dyn error::Error>>{
     loop {
         
         /* === Print Prompt === */
         /* Make prompt path relative to home if possible */
-        let home_dir = env::var("HOME")?;
+        let home_dir    = env::var("HOME")?;
+        let user        = env::var("USER")?;
         let current_dir = env::current_dir()?;
         if let Ok(prompt_path) = current_dir.strip_prefix(home_dir) {
-            print!("{}:~/{}>", config.prompt, prompt_path.display());
+            print!("{} ~/{}> ", user, prompt_path.display());
         } else {
             print!("{}:{}>", config.prompt, current_dir.display());
         }
@@ -26,22 +35,30 @@ pub fn run(config: &Configuration) -> Result<(), Box<dyn error::Error>>{
         /* === Read Input Line === */
         let mut input = String::new();
         stdin().read_line(&mut input)?;
-
-        let mut fields = input.trim().split_whitespace();
+        let fields_vec: Vec<&str> = input.trim().split_whitespace().collect();
+        let mut fields = fields_vec.iter();
         let command = match fields.next() {
             Some(c) => c,
             None => continue,
         };
 
-        let args = fields;
+        let mut args = fields;
 
 //      println!("command: {:?}", command);
 //      println!("args: {:?}", args);
 //
         /* === Built-ins === */
 
-        if command == "exit" {
-            process::exit(0);
+        match *command {
+            "exit" => {
+                println!("Thanks for using ash!");
+                process::exit(0);
+            },
+            "cd" => {
+                env::set_current_dir(args.next().unwrap())?;
+                continue;
+            },
+            _ => ()
         }
 
         /* === Fork and Exec === */
