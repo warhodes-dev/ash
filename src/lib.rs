@@ -9,14 +9,6 @@ pub struct Configuration {
     pub prompt: String
 }
 
-pub fn exit_builtin(errno: i32) {
-    println!("Thanks for using ash!");
-    process::exit(errno);
-}
-
-pub fn cd_builtin() {
-}
-
 pub fn run(config: &Configuration) -> Result<(), Box<dyn error::Error>>{
     loop {
         
